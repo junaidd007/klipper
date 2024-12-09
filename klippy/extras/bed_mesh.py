@@ -861,15 +861,18 @@ class ProbeManager:
             self.faulty_regions.append((c1, c3))
 
     def start_probe(self, gcmd):
-        method = gcmd.get("METHOD", "automatic").lower()
-        can_scan = False
-        pprobe = self.printer.lookup_object("probe", None)
-        if pprobe is not None:
-            probe_name = pprobe.get_status(None).get("name", "")
-            can_scan = probe_name.startswith("probe_eddy_current")
-        if method == "rapid_scan" and can_scan:
-            self.rapid_scan_helper.perform_rapid_scan(gcmd)
-        else:
+    method = gcmd.get("METHOD", "automatic").lower()
+    can_scan = False
+    pprobe = self.printer.lookup_object("probe", None)
+    if pprobe is not None:
+        probe_name = pprobe.get_status(None).get("name", "")
+        can_scan = probe_name.startswith("probe_eddy_current")
+    if method == "rapid_scan" and can_scan:
+        self.rapid_scan_helper.perform_rapid_scan(gcmd)
+    else:
+        total_points = len(self.base_points)
+        for index, point in enumerate(self.base_points, start=1):
+            self.printer.gcode.respond_info(f"Probing point {index}/{total_points}: {point}")
             self.probe_helper.start_probe(gcmd)
 
     def get_zero_ref_pos(self):
